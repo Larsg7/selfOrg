@@ -39,15 +39,13 @@ int main()
 		
 		// Get key
 		int k;
-		cout << "Enter your key:" << endl;
+		printToConsole("Enter your key:");
 		cin >> k;
 		
 		// Get string
 		string unencrypted;
 		printToConsole("Enter your unencrypted word (only lowercase):");
 		cin >> unencrypted;
-		//Debug
-		//cout << unencrypted.length() << endl;
 		
 		// Encrypt String
 		string encrypted = encryptLine(unencrypted, k);		
