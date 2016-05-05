@@ -16,7 +16,7 @@ using namespace std;
 // declare variables
 void doDerive(double t, double y[], double derive[], int sizeOfODE);
 double updateF(double y[]);
-void euler(double t, double y[], double derive[], double f, double h);
+void euler(double t, double y[], double derive[], double f, double h, int sizeOfODE);
 
 int main()
 {
@@ -44,13 +44,13 @@ int main()
 	// first output
 	printf("%15s,%15s,%15s", "Time","y","y\'");
 
-	while (t < maxTime)
+	while (t <= maxTime)
 	{
 		// output values
 		printf("%10.5f\t%10.5f\t%10.5f \n", t, y[0], y[1]);
 
 		// actual computing
-		euler(t, y, derive, f, h);
+		euler(t, y, derive, f, h, sizeOfODE);
 		doDerive(t,y,derive, sizeOfODE);
 			
 		// increase time by step size
@@ -72,12 +72,21 @@ void doDerive(double t, double y[], double derive[], int sizeOfODE)
 
 double updateF(double y[])
 {
-	return -y[0] - 0.1*y[1];
+	return -y[0];
 }
 
-void euler(double t, double y[], double derive[], double f, double h)
+void euler(double t, double y[], double derive[], double f, double h, int sizeOfODE)
 {
 	f = updateF(y);
-	derive[0] = h * y[1];
-    derive[1] = h * f;
+	// derive[0] = h * y[1];
+	// derive[1] = h * f;
+	for (int i = 0; i <= sizeOfODE; ++i)
+	{
+		if (i == sizeOfODE-1)
+		{
+			derive[i] = h * f;
+			break;
+		}
+		derive[i] = h * y[i+1];
+	}    	
 }
