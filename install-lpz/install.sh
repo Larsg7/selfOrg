@@ -64,7 +64,7 @@ sudo apt-get install build-essential
 echo "Installing necessary packages for compiling."
 
 sudo apt-get install g++ make automake libtool xutils-dev m4 libreadline-dev libgsl0-dev \
-libglu-dev libgl1-mesa-dev freeglut3-dev libopenscenegraph-dev libqt4-dev libqt4-opengl \ 
+libglu-dev libgl1-mesa-dev freeglut3-dev libopenscenegraph-dev libqt4-dev libqt4-opengl \
 libqt4-opengl-dev qt4-qmake libqt4-qt3support gnuplot gnuplot-x11 libncurses5-dev
 
 echo "Starting the make-process."	
