@@ -6,7 +6,7 @@ class player {
     private:
         double fitness;
         int strategy;
-        double payoff[] = {2,-1,0,-0.5};
+        double payoff[4] = {2,-1,0,-0.5};
 
     public:
     int revealStrat() {
