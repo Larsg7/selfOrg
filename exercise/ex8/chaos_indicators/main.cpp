@@ -7,18 +7,23 @@
  */
 
 #include <iostream>
-#include <stdio.h>
+#include <math.h>
 
 using namespace std;
+
+const double o = 10.;
+const double b = 8. / 3.;
+const double r = 181.1;         // control parameter
 
 void doDerive(double t, double y[], double derive[], int sizeOfODE);
 void updateF(double f[], double y[]);
 void euler(double t, double y[], double derive[], double f[], double h, int sizeOfODE);
+double dist(double y1[], double y2[], int sizeOfODE);
 
 int main()
 {
 	// declaring constants
-	const double maxTime = 100;
+	const double maxTime = 200;
 	const double h = 0.001;			// step size
 
 	//declaring variables
@@ -29,7 +34,8 @@ int main()
 
 	int sizeOfODE = 3;				// number of arguments of y
 
-	double y[] = {-.1,-5,.1};		// starting value for {x,y,z}
+	//double y[] = {-.1,-5,.1};		// starting value for {x,y,z}
+	double y[] = { -(double)sqrt(b*(r-1.)) - 0.00001, -(double)sqrt(b*(r-1)) + 0.00001, r-1 - 0.00001 };
 	double f[sizeOfODE];
 
 	updateF(f, y);
@@ -37,12 +43,16 @@ int main()
 	double derive[sizeOfODE];		// derivation of y[]
 
 	// first output
-	printf("# %10s,%10s,%10s,%10s\n", "Time","x","y","z");
+	printf("# %10s,%10s,%10s,%10s,%10s\n", "Time","x","y","z","dist");
 
 	while (t <= maxTime)
 	{
+		double attractor[] = { (double)sqrt(b*(r-1.)), (double)sqrt(b*(r-1)), r-1 }; // position of the attractor
+
 		// output values
-		printf("%10.5f\t%10.5f\t%10.5f\t%10.5f \n", t, y[0], y[1], y[2]);
+		//printf("%10.5f\t%10.5f\t%10.5f\t%10.5f \n", t, y[0], y[1], y[2]);
+		printf("%10.5f\t%10.5f\t%10.5f\t%10.5f\t%10.5f \n", t, y[0], y[1], y[2], dist(attractor, y, sizeOfODE));
+
 
 		// actual computing
 		euler(t, y, derive, f, h, sizeOfODE);
@@ -66,9 +76,7 @@ void doDerive(double t, double y[], double derive[], int sizeOfODE)
 }
 
 void updateF(double f[], double y[]) {
-	const double o = 10.;
-	const double b = 8. / 3.;
-	const double r = 18;         // control parameter
+
 
 	f[0] = (o * (y[1] - y[0]));
 	f[1] = (y[0] * (r - y[2]) - y[1]);
@@ -84,4 +92,14 @@ void euler(double t, double y[], double derive[], double f[], double h, int size
 	{
 		derive[i] = h * f[i];
 	}
+}
+
+
+
+double dist(double y1[], double y2[], int sizeOfODE) {
+	double result = 0;
+	for (int i = 0; i < sizeOfODE; ++i) {
+		result += (y1[i] - y2[i]) * (y1[i] - y2[i]);
+	}
+	return (double)sqrt(result);
 }
