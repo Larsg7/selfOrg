@@ -1,0 +1,1 @@
+for armadillo: g++ -llapack -lblas

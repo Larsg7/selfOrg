@@ -24,7 +24,7 @@ int main()
 {
 	// declaring constants
 	const double maxTime = 200;
-	const double h = 0.001;			// step size
+	const double h = 0.0001;			// step size
 
 	//declaring variables
 	double t = 0;					// starting time
