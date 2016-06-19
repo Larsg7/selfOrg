@@ -3,6 +3,7 @@
 //#include <random>
 #include <stdlib.h>
 //#include <cstdlib>
+#include <vector>
 #define ARMA_DONT_USE_WRAPPER
 #include <armadillo> // libary for linear algebra
 
@@ -14,7 +15,6 @@ using namespace arma;
  *
  * @author: Lars Gröber
  */
-
 class Neural_Network {
 
 protected:
@@ -24,9 +24,8 @@ protected:
 
     double fitness;
 
-    double STPTrigger;                                          // value at which STP is applied
-
-    bool STPOn = false;
+    double chanceOfMutate = 0.001;
+    double maxMutate = 0.01;
 
     mat outputVec;
     mat inputVec;
@@ -36,14 +35,7 @@ protected:
      * Activation function
      */
     void sigmoid(double &input) {
-        input = (1 / (1+exp(-input)));
-    }
-
-    /**
-     * Derivative of the activation function
-     */
-    void sigmoidPrime(double &input) {
-        input = (exp(-input) / pow((1+exp(-input)),2));
+        input = 1 / (1+exp(-input));
     }
 
 public:
@@ -59,7 +51,7 @@ public:
      * @returns: outputVec - Matrix of size (inputRows, outputSize)
      */
     mat forward(mat inputVec) {
-        inputVec = normalise(inputVec, 2, 1);                   // normalize rows (as they are sets of inputs)
+        inputVec = normalise(inputVec, 2, 1);                   // normalise rows (as they are sets of inputs)
         this->inputVec = inputVec;
         mat nInput;
         nInput = inputVec * this->inputWeights;                 // adding all inputs for every neuron together - nInput has dim(input.rows, numberOfNeurons)
@@ -78,7 +70,7 @@ public:
             }
         }
 
-
+        //outputVec = normalise(outputVec, 2, 1);    
         return outputVec;
     }
 
@@ -97,24 +89,29 @@ public:
     }
 
     /**
-     * Initializes Weights-Matrices with random values between 0 and 1
+     * Initializes Weights-Matrices with random values between -1 and 1
      */
     void initWeightsRandom() {
-        arma_rng::set_seed_random();
-        this->inputWeights.randu();
-        this->outputWeights.randu();
+        std::srand(rand());
+
+        double chanceOfZero = 0.2;
+
+        for (int i = 0; i < this->inputWeights.n_rows; ++i) 
+            for (int j = 0; j < this->inputWeights.n_cols; ++j) 
+                this->inputWeights(i,j) = ((double)rand() / INT_MAX) < 1 - chanceOfZero ? (double)rand() / (INT_MAX / 2) -1 : 0;    // produce random number between -1 and 1 or effectively not connecting input/neurons
+
+        for (int i = 0; i < this->outputWeights.n_rows; ++i) 
+            for (int j = 0; j < this->outputWeights.n_cols; ++j) 
+                this->outputWeights(i,j) = ((double)rand() / INT_MAX) < 1 - chanceOfZero ? (double)rand() / (INT_MAX / 2) -1 : 0;
     }
 
     /**
      * Initialize Weights-Matrices with given values
      */
-    void initWeights(mat inputWeights, mat outputWeights) {
+    void setWeights(mat inputWeights, mat outputWeights) {
         this->inputWeights = inputWeights;
         this->outputWeights = outputWeights;
-    }
-
-
-    // TODO: Function learn (takes an input matrix, trains network)
+    }   
 
 };
 
@@ -127,17 +124,7 @@ public:
 class Neural_Custom: public Neural_Network {
 
 protected:
-    /**
-     * Use STP to update weights
-     *
-     * @param: the index (0 to numberOfNeurons-1) of the neuron which fired
-     */
-    void STP(int inputFired) {
-        for (int i = 0; i < ; ++i)
-        {
-            /* code */
-        }
-    }
+    
 
 public:
     /**
@@ -152,81 +139,139 @@ public:
     }
 
     /**
-     * inject winners genes in looser
+     * Breed a new network with another network and initialise it (has the same topology)
+     *
+     * @param: the other network to breed with
+     * @return: the newly created network
      */
-    void breed(Neural_Custom other_Neural) {
+    Neural_Custom breed(Neural_Custom other_Neural) {
+
         mat theirInputW = other_Neural.inputWeights;
         mat theirOutputW = other_Neural.outputWeights;
-        mat newInputW = theirInputW;
-        mat newOutpurW = theirOutputW;
-
-        for (int i = 0; i < this->numberOfNeurons; ++i)
-        {
-            for (int j = 0; j < this->inputSize; ++j)
-            {
-                if (rand() % 1 < .5) {
-                    newInputW(i,j) = theirInputW(i,j);
-                } 
-                else {
-                    newInputW(i,j) = this->inputWeights(i,j);
-                }
-            }
-        }
         
-        for (int i = 0; i < this->numberOfNeurons; ++i)
-        {
-            for (int j = 0; j < this->outputSize; ++j)
-            {
-                if (rand() % 1 < .5) {
-                    newOutputW(i,j) = theirOutputW(i,j);
-                } 
-                else {
-                    newOutputW(i,j) = this->outputWeights(i,j);
-                }
-            }
-        }
+        mat newInputW = theirInputW;
+        mat newOutputW = theirOutputW;
+
+        for (int i = 0; i < this->inputWeights.n_rows; ++i) 
+            for (int j = 0; j < this->inputWeights.n_cols; ++j) 
+                newInputW(i,j) = rand() < INT_MAX / 2 ? theirInputW(i,j) : this->inputWeights(i,j);     // with a chance of 1/2 use the own weight for the new network 
+                
+        for (int i = 0; i < this->outputWeights.n_rows; ++i) 
+            for (int j = 0; j < this->outputWeights.n_cols; ++j)
+                newOutputW(i,j) = rand() < INT_MAX / 2 ? theirOutputW(i,j) : this->outputWeights(i,j);
+
+        Neural_Custom newNetwork;
+        newNetwork.initNetwork(this->inputSize, this->outputSize, this->numberOfNeurons);           
+        newNetwork.setWeights(newInputW, newOutputW);
+        newNetwork.mutate();
+        return newNetwork;
+    }
+
+    void mutate() {
+
+        // with a chance of chanceOfMutate change one weight by something between 1-maxMutate and 1+maxMutate
+        for (int i = 0; i < this->inputWeights.n_rows; ++i) 
+            for (int j = 0; j < this->inputWeights.n_cols; ++j)
+                this->inputWeights(i,j) *= (double)rand()/INT_MAX < this->chanceOfMutate ? 1+fmod((double)rand()/(INT_MAX/2)-1, this->maxMutate) : 1;   
+                
+        for (int i = 0; i < this->outputWeights.n_rows; ++i) 
+            for (int j = 0; j < this->outputWeights.n_cols; ++j)
+                this->outputWeights(i,j) *= (double)rand()/INT_MAX < this->chanceOfMutate ? 1+fmod((double)rand()/(INT_MAX/2)-1, this->maxMutate) : 1;
     }
 
     // TODO: Genetic sorting (fitness etc.), short-term plasticity
-    /**
-     *  Calculating the fitness of a given network
-     */
-
-
-    /**
-     *  Initializes Short-Term plasticity
-     */
-    /*
-    void STP_init(double omega, double gamma, double U) {
-        double this->omega = omega;
-        double this->gamma = gamma;
-        double this->U = U;
-        this->STPOn = true;
-
-        mat this->inputSTP = new mat(this->inputSize, 2);         // matrix containing x and u values for each input synapse
-        mat this->outputSTP = new mat(this->numberOfNeurons, 2);  // matrix containing x and u values for each output synapse
-        this->inputSTP.fill(.5);
-        this->outputSTP.fill(.5);
-    }
-    */
-    
-
 
 };
 
+double fitness(double a, double b, double output) {
+    double c = ((a + b) - output);
+    return 1/exp(c*c*c);
+}
+
+void test();
+
+
 int main() {
+    int numberOfNetworks = 25;
+    int inputSize = 2;
+    int outputSize = 1;
+    int numberOfNeurons = 2;
+
+    test();
+
+    std::srand(time(NULL));
+
+    std::vector<Neural_Custom*> listNetworks;
+
+    for (int i = 0; i < numberOfNetworks; ++i)
+    {
+        listNetworks.push_back(new Neural_Custom);
+        listNetworks[i]->initNetwork(inputSize, outputSize, numberOfNeurons);
+        listNetworks[i]->initWeightsRandom();
+    }
+
+    for (int i = 0; i < listNetworks.size(); ++i)
+        {
+            mat input = mat(1,2);
+            input(0,0) = 2;
+            input(0,1) = 4;
+            input.print();
+            mat output = listNetworks[i]->forward(input);
+            output.print();
+            std::cout << fitness((double)input(0,0), (double)input(0,1), (double)output(0,0)) << std::endl;
+        }    
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void test() {
     Neural_Custom neural;
-    neural.initNetwork(2, 2, 2);
+    neural.initNetwork(2, 1, 2);
     neural.initWeightsRandom();
 
+    Neural_Custom neural2;
+    neural2.initNetwork(2, 1, 2);
+    neural2.initWeightsRandom();
+
+    Neural_Custom neural3 = neural.breed(neural2);
+
     mat input;
-    input.set_size(5,2);
+    input.set_size(1,2);
     input.fill(6.);
+
+    std:cout << input(0,0) << std::endl;
 
     mat output;
     output = neural.forward(input);
     output.print();
 
-    output = neural.costFunction(input);
+    std::cout << "Neural2:" << std::endl;
+
+    output = neural2.forward(input);
+    output.print();
+
+    std::cout << "Neural3:" << std::endl;
+
+    output = neural3.forward(input);
     output.print();
 }
+

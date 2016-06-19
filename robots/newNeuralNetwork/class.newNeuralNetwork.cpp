@@ -1,4 +1,4 @@
-
+#include <math.h>
 
 class Neural_Network;
 class Neuron;
@@ -12,12 +12,29 @@ class Neural_Network {
 
 	double fitness;
 
-	Neuron Neurons = new Neuron[];
-	
+	Neuron* Neurons;
+
+	void initNetwork(int numberOfNeurons, int inputSize, int outputSize) {
+		this->numberOfNeurons = numberOfNeurons;
+		this->inputSize = inputSize;
+		this->outputSize = outputSize;
+
+		this->Neurons = new Neuron[numberOfNeurons];
+	}
+
+
+
 };
 
 class Neuron {
 
+
+		/**
+     * Activation function
+     */
+    void sigmoid(double &input) {
+        input = (1 / (1+exp(-input)));
+    }
 };
 
 class Genome {
@@ -26,8 +43,8 @@ class Genome {
 
 int main() {
 
-	const numberOfNeuralNets = 5;
+	const int numberOfNeuralNets = 5;
 
-	Neural_Network Networks = new Neural_Network[numberOfNeuralNets];
+	Neural_Network* Networks = new Neural_Network[numberOfNeuralNets];
 
 }
