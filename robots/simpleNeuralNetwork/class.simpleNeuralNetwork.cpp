@@ -17,6 +17,7 @@ using namespace arma;
  *
  * @author: Lars Gröber
  */
+ 
 class Neural_Network {
 
 protected:
@@ -62,7 +63,7 @@ public:
         nInput = inputVec * this->inputWeights;                     // adding all inputs for every neuron together - nInput has dim(input.rows, numberOfNeurons)
 
         for (int i = 0; i < this->inputVec.n_rows; ++i) {           // applying sigmoid function to every neuron
-            for (int j = 0; j < this->inputSize; ++j) {
+            for (int j = 0; j < this->numberOfNeurons; ++j) {
                 this->sigmoid(nInput(i,j));
             }
         }
