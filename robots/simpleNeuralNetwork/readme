@@ -1,0 +1,2 @@
+for armadillo: g++ -lgslcblas
+
